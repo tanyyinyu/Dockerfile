@@ -1,0 +1,18 @@
+FROM centos:7
+MAINTAINER tany tyy-28@163.com
+RUN yum install -y wget perl-5.16.3-294.el7_6.x86_64 perl-Data-Dumper libaio-devel numactl-devel
+RUN useradd mysql
+RUN mkdir -p /data/mysql && chown mysql:mysql /data/mysql
+WORKDIR /usr/local/src
+RUN wget -c https://cdn.mysql.com//Downloads/MySQL-5.6/mysql-5.6.46-linux-glibc2.12-x86_64.tar.gz
+RUN tar zxf mysql-5.6.46-linux-glibc2.12-x86_64.tar.gz
+RUN rm -rf mysql-5.6.46-linux-glibc2.12-x86_64.tar.gz
+RUN mv mysql-5.6.46-linux-glibc2.12-x86_64 /usr/local/mysql
+WORKDIR /usr/local/mysql
+RUN ./scripts/mysql_install_db --user=mysql --datadir=/data/mysql
+RUN cp /usr/local/mysql/support-files/mysql.server /etc/init.d/mysqld && chkconfig --add mysqld
+RUN sed -r '45,48s/(basedir=)(.*)/\1\/usr\/local\/mysql/' -i /etc/init.d/mysqld && sed -r '45,48s/(datadir=)(.*)/\1\/data\/mysql/' -i /etc/init.d/mysqld
+RUN mkdir /etc/my.cnf.d && wget -O /etc/my.cnf.d/my.cnf https://configfile-tanytan.oss-cn-shenzhen.aliyuncs.com/my.cnf
+RUN echo "export PATH=$PATH:/usr/local/mysql/bin/" >>/etc/bashrc && source /etc/bashrc
+EXPOSE 3306
+ENTRYPOINT /etc/init.d/mysqld start && tail -f /etc/passwd
