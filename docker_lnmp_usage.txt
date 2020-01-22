@@ -1,0 +1,91 @@
+[root@iZwz935vxo2oitvai5ih1aZ ~]# docker run -tid -v /connect/:/connect -p 3306:3306 -p 9000:9000 -p 80:80 centos_mysql5.6_php7.3_nginx1.16:1 bash
+d3addd3e35b49903057721bbe13082be667d14b026bb85e0e82e912dbd0b1323
+[root@iZwz935vxo2oitvai5ih1aZ ~]# docker exec -it d3addd3 bash
+[root@d3addd3e35b4 ~]# ps aux |grep mysql
+root         1  0.0  0.0  11688  1328 pts/0    Ss+  15:51   0:00 /bin/sh -c /etc/init.d/php-fpm start && /etc/init.d/mysqld start && nginx && tail -f /etc/passwd bash
+root        16  0.0  0.0  11824  1576 pts/0    S+   15:51   0:00 /bin/sh /usr/local/mysql/bin/mysqld_safe --datadir=/data/mysql --pid-file=/data/mysql/d3addd3e35b4.pid
+mysql      112  2.2 26.2 1321064 467028 pts/0  Sl+  15:51   0:00 /usr/local/mysql/bin/mysqld --basedir=/usr/local/mysql --datadir=/data/mysql --plugin-dir=/usr/local/mysql/lib/plugin --user=mysql --log-error=d3addd3e35b4.err --pid-file=/data/mysql/d3addd3e35b4.pid
+root       159  0.0  0.0   9092   664 pts/1    S+   15:51   0:00 grep --color=auto mysql
+[root@d3addd3e35b4 ~]# ps aux |grep php  
+root         1  0.0  0.0  11688  1328 pts/0    Ss+  15:51   0:00 /bin/sh -c /etc/init.d/php-fpm start && /etc/init.d/mysqld start && nginx && tail -f /etc/passwd bash
+root         8  0.0  0.3 110816  6136 ?        Ss   15:51   0:00 php-fpm: master process (/usr/local/php-fpm/etc/php-fpm.conf)
+php-fpm      9  0.0  0.3 110816  5684 ?        S    15:51   0:00 php-fpm: pool www
+php-fpm     10  0.0  0.3 110816  5684 ?        S    15:51   0:00 php-fpm: pool www
+[root@d3addd3e35b4 ~]# ps aux |grep nginx
+root         1  0.0  0.0  11688  1328 pts/0    Ss+  15:51   0:00 /bin/sh -c /etc/init.d/php-fpm start && /etc/init.d/mysqld start && nginx && tail -f /etc/passwd bash
+root       142  0.0  0.0  46448   972 ?        Ss   15:51   0:00 nginx: master process nginx
+nginx      143  0.0  0.1  46856  1928 ?        S    15:51   0:00 nginx: worker process
+root       163  0.0  0.0   9092   664 pts/1    S+   15:51   0:00 grep --color=auto nginx
+[root@d3addd3e35b4 ~]# ls /connect/
+bbs.tany.conf  wwwroot
+[root@d3addd3e35b4 connect]# cp bbs.tany.conf /etc/nginx/conf.d/
+[root@d3addd3e35b4 connect]# nginx -t
+nginx: the configuration file /etc/nginx/nginx.conf syntax is ok
+nginx: configuration file /etc/nginx/nginx.conf test is successful
+[root@d3addd3e35b4 connect]# nginx -s reload
+[root@d3addd3e35b4 connect]# ls wwwroot/bbs.tany.com/
+admin.php  config           favicon.ico  index.php   misc.php    search.php  uc_client
+api        connect.php      forum.php    install     plugin.php  source      uc_server
+api.php    crossdomain.xml  group.php    m           portal.php  static
+archiver   data             home.php     member.php  robots.txt  template
+[root@d3addd3e35b4 connect]# mysql -uroot
+Welcome to the MySQL monitor.  Commands end with ; or \g.
+Your MySQL connection id is 1
+Server version: 5.6.46 MySQL Community Server (GPL)
+
+Copyright (c) 2000, 2019, Oracle and/or its affiliates. All rights reserved.
+
+Oracle is a registered trademark of Oracle Corporation and/or its
+affiliates. Other names may be trademarks of their respective
+owners.
+
+Type 'help;' or '\h' for help. Type '\c' to clear the current input statement.
+
+mysql> create database discuz;
+Query OK, 1 row affected (0.00 sec)
+
+mysql> exit
+[root@d3addd3e35b4 ~]# mysql -uroot
+Welcome to the MySQL monitor.  Commands end with ; or \g.
+Your MySQL connection id is 2
+Server version: 5.6.46 MySQL Community Server (GPL)
+
+Copyright (c) 2000, 2019, Oracle and/or its affiliates. All rights reserved.
+
+Oracle is a registered trademark of Oracle Corporation and/or its
+affiliates. Other names may be trademarks of their respective
+owners.
+
+Type 'help;' or '\h' for help. Type '\c' to clear the current input statement.
+
+mysql> grant all on discuz.* to 'discuz'@'127.0.0.1' identified by 'discuz';
+Query OK, 0 rows affected (0.00 sec)
+
+mysql> exit
+Bye
+[root@d3addd3e35b4 ~]# cat /etc/nginx/conf.d/bbs.tany.conf 
+server {
+    listen       80 ;
+    server_name bbs.tany.com;
+
+	root	/connect/wwwroot/bbs.tany.com/;
+    index  index.html index.htm index.php;
+
+ location ~ \.php$ {
+        root           /connect/wwwroot/bbs.tany.com;
+        fastcgi_pass   127.0.0.1:9000;
+        fastcgi_index  index.php;
+        fastcgi_param  SCRIPT_FILENAME  /connect/wwwroot/bbs.tany.com$fastcgi_script_name;
+        include        fastcgi_params;
+    }
+}
+[root@d3addd3e35b4 ~]# curl -x127.0.0.1:80 bbs.tany.com -I
+HTTP/1.1 302 Found
+Server: nginx/1.16.1
+Date: Wed, 22 Jan 2020 16:08:46 GMT
+Content-Type: text/html; charset=UTF-8
+Connection: keep-alive
+X-Powered-By: PHP/7.3.0
+location: install/
+
+
