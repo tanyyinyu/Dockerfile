@@ -1,0 +1,6 @@
+build a database and grant to 127.0.0.1 then it is ready to use;
+but if you want to accecc as root in the domain computer, it is not working;
+and docker occur capability loss;
+the test result go down;
+
+
