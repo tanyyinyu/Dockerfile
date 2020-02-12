@@ -36,6 +36,7 @@ cd /root
  rpm -Uvh http://nginx.org/packages/centos/7/noarch/RPMS/nginx-release-centos-7-0.el7.ngx.noarch.rpm
  yum install -y openssl
  yum install -y nginx
+ systemctl enable nginx
 #config
 mkdir -p /data/wwwroot/test.com
 cat >  /data/wwwroot/test.com/index.php <<EOF
